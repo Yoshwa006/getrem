@@ -1,0 +1,14 @@
+.treatments-list {
+  width: 100%;
+}
+
+.remaining-amount {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.paid-full {
+  color: #388e3c;
+  font-weight: 600;
+}
+
