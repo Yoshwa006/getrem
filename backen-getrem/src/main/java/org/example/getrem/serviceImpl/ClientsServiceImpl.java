@@ -1,4 +1,4 @@
-package org.example.getrem.service.impl;
+package org.example.getrem.serviceImpl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.getrem.dto.client.ClientResponse;

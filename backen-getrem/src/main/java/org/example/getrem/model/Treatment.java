@@ -3,6 +3,7 @@ package org.example.getrem.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.getrem.enums.TreatmentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,5 +33,7 @@ public class Treatment {
 
     @Column(nullable = false)
     private LocalDate createdAt;
+
+    private TreatmentStatus treatmentStatus;
 }
 

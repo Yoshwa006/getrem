@@ -22,10 +22,8 @@ public class Doctor {
     private String specialization;
 
     private String email;
-
     private String phone;
 
     @Column(nullable = false)
     private Boolean active = true;
 }
-

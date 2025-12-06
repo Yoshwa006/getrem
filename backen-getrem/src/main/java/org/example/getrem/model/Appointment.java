@@ -1,6 +1,18 @@
 package org.example.getrem.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.getrem.enums.AppointmentStatus;
@@ -17,11 +29,13 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    // A client can have many appointments
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Clients client;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    // A doctor can have many appointments
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
@@ -33,5 +47,8 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppointmentStatus status;
-}
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reminder> reminders;
+
+}

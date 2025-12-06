@@ -28,7 +28,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
       AND a.status <> 'CANCELLED'
       AND (:excludeAppointmentId IS NULL OR a.id <> :excludeAppointmentId)
       AND :appointmentTime < DATE_ADD(a.appointment_time, INTERVAL 30 MINUTE)
-      AND DATE_ADD(:appointmentTime, INTERVAL 30 MINUTE) > a.appointment_time
+      AND DATE_ADD(:appointmentTime, INTERVAL 1 MINUTE) > a.appointment_time
     """, nativeQuery = true)
     Long countOverlappingAppointments(
             @Param("doctorId") UUID doctorId,
