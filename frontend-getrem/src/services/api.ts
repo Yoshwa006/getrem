@@ -28,6 +28,22 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle common errors
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+      console.error('Unauthorized access');
+    } else if (error.response?.status >= 500) {
+      // Handle server errors
+      console.error('Server error:', error.response?.data);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Clients API
 export const clientsApi = {
   getAll: async (page: number = 0, size: number = 20) => {

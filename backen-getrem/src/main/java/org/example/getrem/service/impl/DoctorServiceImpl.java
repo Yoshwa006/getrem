@@ -10,7 +10,7 @@ import org.example.getrem.service.DoctorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,8 +88,9 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isTimeSlotAvailable(UUID doctorId, LocalDateTime appointmentTime, UUID excludeAppointmentId) {
-        return !doctorRepository.existsOverlappingAppointment(doctorId, appointmentTime, excludeAppointmentId);
+    public boolean isTimeSlotAvailable(UUID doctorId, OffsetDateTime appointmentTime, UUID excludeAppointmentId) {
+        Long overlappingCount = doctorRepository.countOverlappingAppointments(doctorId, appointmentTime.toLocalDateTime(), excludeAppointmentId);
+        return overlappingCount == null || overlappingCount == 0;
     }
 
     private DoctorResponse mapToResponse(Doctor doctor) {

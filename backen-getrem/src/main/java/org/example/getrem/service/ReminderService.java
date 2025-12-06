@@ -8,13 +8,13 @@ import java.util.UUID;
 
 public interface ReminderService {
 
-    void scheduleRemindersForAppointment(Appointment appointment, List<UUID> reminderRuleIds, List<LocalDateTime> customReminderTimes);
+    void scheduleRemindersForAppointment(Appointment appointment, List<String> reminderOptions, List<LocalDateTime> customReminderTimes);
 
     void scheduleRemindersForAppointment(Appointment appointment);
 
     void cancelRemindersForAppointment(UUID appointmentId);
 
-    void rescheduleRemindersForAppointment(Appointment appointment, List<UUID> reminderRuleIds, List<LocalDateTime> customReminderTimes);
+    void rescheduleRemindersForAppointment(Appointment appointment, List<String> reminderOptions, List<LocalDateTime> customReminderTimes);
 
     void rescheduleRemindersForAppointment(Appointment appointment);
 }

@@ -14,14 +14,28 @@ import java.util.UUID;
 public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     List<Doctor> findByActiveTrue();
     
-    @Query("SELECT COUNT(a) > 0 FROM Appointment a WHERE a.doctor.id = :doctorId " +
-           "AND a.appointmentTime = :appointmentTime " +
-           "AND a.status != 'CANCELLED' " +
-           "AND (:excludeAppointmentId IS NULL OR a.id != :excludeAppointmentId)")
-    boolean existsOverlappingAppointment(
-        @Param("doctorId") UUID doctorId,
-        @Param("appointmentTime") LocalDateTime appointmentTime,
-        @Param("excludeAppointmentId") UUID excludeAppointmentId
+    // Check for overlapping appointments (assuming 30-minute appointment duration)
+    // Two appointments overlap if:
+    // - New start time is before existing end time AND
+    // - New end time is after existing start time
+    // Existing: [a.appointment_time, a.appointment_time + 30 min]
+    // New: [:appointmentTime, :appointmentTime + 30 min]
+    // Overlap if: :appointmentTime < (a.appointment_time + 30 min) AND (:appointmentTime + 30 min) > a.appointment_time
+    @Query(value = """
+    SELECT COUNT(*)
+    FROM appointment a
+    WHERE a.doctor_id = :doctorId
+      AND a.status <> 'CANCELLED'
+      AND (:excludeAppointmentId IS NULL OR a.id <> :excludeAppointmentId)
+      AND :appointmentTime < DATE_ADD(a.appointment_time, INTERVAL 30 MINUTE)
+      AND DATE_ADD(:appointmentTime, INTERVAL 30 MINUTE) > a.appointment_time
+    """, nativeQuery = true)
+    Long countOverlappingAppointments(
+            @Param("doctorId") UUID doctorId,
+            @Param("appointmentTime") LocalDateTime appointmentTime,
+            @Param("excludeAppointmentId") UUID excludeAppointmentId
     );
+
+
 }
 

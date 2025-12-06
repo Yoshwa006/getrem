@@ -1,0 +1,27 @@
+.theme-toggle {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border: none !important;
+  background: transparent !important;
+  transition: var(--transition-base) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+}
+
+.theme-toggle:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle .anticon {
+  font-size: 18px;
+}
+

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { paymentsApi, treatmentsApi } from '../../services/api';
-import type { Treatment, CreatePaymentRequest, PaymentMethod } from '../../types';
+import type { Treatment, CreatePaymentRequest } from '../../types';
+import { PaymentMethod } from '../../types';
+
 import './PaymentForm.css';
 
 interface PaymentFormProps {

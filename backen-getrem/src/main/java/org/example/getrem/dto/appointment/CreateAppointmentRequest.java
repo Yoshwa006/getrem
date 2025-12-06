@@ -23,13 +23,14 @@ public class CreateAppointmentRequest {
     private UUID doctorId;
 
     @NotNull(message = "Appointment time is required")
-    @Future(message = "Appointment time must be in the future")
     private LocalDateTime appointmentTime;
 
     private String notes;
 
-    private java.util.List<java.util.UUID> reminderRuleIds;
+    // New reminder options: "IMMEDIATE", "TEN_MINUTES_BEFORE", "ONE_DAY_BEFORE"
+    private java.util.List<String> reminderOptions;
 
+    // Custom reminders with specific date/time
     private java.util.List<LocalDateTime> customReminderTimes;
 }
 

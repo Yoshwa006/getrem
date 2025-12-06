@@ -45,12 +45,13 @@ export default function TreatmentsList() {
   };
 
   const calculateTotalPaid = (treatment: Treatment) => {
-    return treatment.payments.reduce((sum, payment) => sum + payment.amountPaid, 0);
+    return (treatment.payments ?? []).reduce((sum, payment) => sum + payment.amountPaid, 0);
   };
-
+  
   const calculateRemaining = (treatment: Treatment) => {
     return treatment.totalAmount - calculateTotalPaid(treatment);
   };
+
 
   if (loading && treatments.length === 0) {
     return <div className="loading">Loading treatments...</div>;

@@ -6,9 +6,10 @@ export enum AppointmentStatus {
 }
 
 export enum ReminderType {
-  IMMEDIATE_CONFIRMATION = 'IMMEDIATE_CONFIRMATION',
-  TEN_DAYS_BEFORE = 'TEN_DAYS_BEFORE',
-  ONE_TO_TWO_HOURS_BEFORE = 'ONE_TO_TWO_HOURS_BEFORE',
+  IMMEDIATE = 'IMMEDIATE',
+  TEN_MINUTES_BEFORE = 'TEN_MINUTES_BEFORE',
+  ONE_DAY_BEFORE = 'ONE_DAY_BEFORE',
+  CUSTOM = 'CUSTOM',
 }
 
 export enum ReminderStatus {
@@ -22,6 +23,13 @@ export enum NotificationChannel {
   WHATSAPP = 'WHATSAPP',
   SMS = 'SMS',
   EMAIL = 'EMAIL',
+}
+
+export enum NotificationStatus {
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  FAILED = 'FAILED',
 }
 
 export enum PaymentMethod {
@@ -83,7 +91,7 @@ export interface CreateAppointmentRequest {
   doctorId: string;
   appointmentTime: string;
   notes?: string;
-  reminderRuleIds?: string[];
+  reminderOptions?: string[]; // "IMMEDIATE", "TEN_MINUTES_BEFORE", "ONE_DAY_BEFORE"
   customReminderTimes?: string[];
 }
 
@@ -92,7 +100,7 @@ export interface UpdateAppointmentRequest {
   doctorId?: string;
   notes?: string;
   status?: AppointmentStatus;
-  reminderRuleIds?: string[];
+  reminderOptions?: string[]; // "IMMEDIATE", "TEN_MINUTES_BEFORE", "ONE_DAY_BEFORE"
   customReminderTimes?: string[];
 }
 

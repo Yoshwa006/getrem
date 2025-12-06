@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.getrem.dto.doctor.CreateDoctorRequest;
 import org.example.getrem.dto.doctor.DoctorResponse;
 import org.example.getrem.service.DoctorService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -62,7 +64,7 @@ public class DoctorController {
     @GetMapping("/{id}/availability")
     public ResponseEntity<Map<String, Boolean>> checkTimeSlotAvailability(
             @PathVariable UUID id,
-            @RequestParam LocalDateTime appointmentTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime appointmentTime,
             @RequestParam(required = false) UUID excludeAppointmentId) {
         boolean available = doctorService.isTimeSlotAvailable(id, appointmentTime, excludeAppointmentId);
         return ResponseEntity.ok(Map.of("available", available));

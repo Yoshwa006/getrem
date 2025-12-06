@@ -1,12 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Card, List, Tag, Typography, Space, Select } from 'antd';
+import { 
+  Calendar, 
+  Card, 
+  List, 
+  Tag, 
+  Typography, 
+  Space, 
+  Select, 
+  message, 
+  Empty, 
+  Spin,
+  Badge,
+  Divider
+} from 'antd';
+import { CalendarOutlined, UserOutlined, ClockCircleOutlined, FilterOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { appointmentsApi, doctorsApi } from '../../services/api';
 import type { CalendarAppointmentResponse, AppointmentStatus, Doctor } from '../../types';
 import { format } from 'date-fns';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function CalendarViewAntd() {
   const [appointments, setAppointments] = useState<CalendarAppointmentResponse[]>([]);
@@ -38,14 +52,17 @@ export default function CalendarViewAntd() {
     }
   };
 
-  const loadAppointments = async () => {
+  const loadAppointments = async (year?: number, month?: number) => {
     try {
       setLoading(true);
       const now = new Date();
-      const data = await appointmentsApi.getForMonth(now.getFullYear(), now.getMonth() + 1);
+      const targetYear = year || now.getFullYear();
+      const targetMonth = month !== undefined ? month : now.getMonth() + 1;
+      const data = await appointmentsApi.getForMonth(targetYear, targetMonth);
       setAppointments(data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load appointments', err);
+      message.error('Failed to load appointments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -60,17 +77,28 @@ export default function CalendarViewAntd() {
 
   const dateCellRender = (value: Dayjs) => {
     const dayAppointments = getAppointmentsForDate(value);
+    if (dayAppointments.length === 0) return null;
+    
     return (
-      <div>
+      <div style={{ padding: '4px 0' }}>
         {dayAppointments.slice(0, 2).map((apt) => (
           <div key={apt.id} style={{ marginBottom: 4 }}>
-            <Tag color={getStatusColor(apt.status)} style={{ fontSize: '10px', margin: 0 }}>
+            <Tag 
+              color={getStatusColor(apt.status)} 
+              style={{ 
+                fontSize: '11px', 
+                margin: 0,
+                borderRadius: '4px',
+                padding: '2px 6px',
+                lineHeight: '1.4'
+              }}
+            >
               {format(new Date(apt.appointmentTime), 'HH:mm')} - {apt.clientName}
             </Tag>
           </div>
         ))}
         {dayAppointments.length > 2 && (
-          <div style={{ fontSize: '10px', color: '#999' }}>
+          <div style={{ fontSize: '11px', color: '#8c8c8c', fontWeight: 500 }}>
             +{dayAppointments.length - 2} more
           </div>
         )}
@@ -87,18 +115,33 @@ export default function CalendarViewAntd() {
     return colors[status] || 'default';
   };
 
+  const getStatusBadge = (status: AppointmentStatus) => {
+    const statusConfig: Record<AppointmentStatus, { color: string; text: string }> = {
+      SCHEDULED: { color: 'processing', text: 'Scheduled' },
+      COMPLETED: { color: 'success', text: 'Completed' },
+      CANCELLED: { color: 'error', text: 'Cancelled' },
+    };
+    const config = statusConfig[status] || { color: 'default', text: status };
+    return <Badge status={config.color as any} text={config.text} />;
+  };
+
   const selectedAppointments = getAppointmentsForDate(selectedDate);
 
   return (
     <div>
-      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-        <Title level={2} style={{ margin: 0 }}>Calendar</Title>
+      <div className="page-header">
+        <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <CalendarOutlined />
+          Calendar View
+        </Title>
         <Select
           placeholder="Filter by doctor"
           allowClear
-          style={{ width: 250 }}
+          style={{ width: 280 }}
+          size="large"
           value={selectedDoctorId}
           onChange={setSelectedDoctorId}
+          suffixIcon={<FilterOutlined />}
         >
           {doctors.map((doctor) => (
             <Select.Option key={doctor.id} value={doctor.id}>
@@ -106,65 +149,123 @@ export default function CalendarViewAntd() {
             </Select.Option>
           ))}
         </Select>
-      </Space>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card>
-          <Calendar
-            value={selectedDate}
-            onChange={setSelectedDate}
-            dateCellRender={dateCellRender}
-            onPanelChange={(date) => {
-              setSelectedDate(date);
-              loadAppointments();
-            }}
-          />
-        </Card>
+      </div>
 
-        {selectedAppointments.length > 0 && (
-          <Card title={`Appointments for ${selectedDate.format('MMMM DD, YYYY')}`}>
-            <List
-              dataSource={selectedAppointments}
-              renderItem={(apt) => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <span>{apt.clientName}</span>
-                        <Tag color={getStatusColor(apt.status)}>{apt.status}</Tag>
-                      </Space>
-                    }
-                    description={
-                      <Space direction="vertical" size="small">
-                        <div>
-                          <strong>Doctor:</strong> {apt.doctorName}
-                          {apt.doctorSpecialization && (
-                            <Tag color="blue" style={{ marginLeft: 8 }}>{apt.doctorSpecialization}</Tag>
-                          )}
-                        </div>
-                        <div>{format(new Date(apt.appointmentTime), 'MMMM dd, yyyy HH:mm')}</div>
-                        {apt.notes && <div>{apt.notes}</div>}
-                        {apt.reminderSchedules.length > 0 && (
-                          <div>
-                            <strong>Reminders:</strong>
-                            <Space style={{ marginLeft: 8 }}>
-                              {apt.reminderSchedules.map((reminder) => (
-                                <Tag key={reminder.reminderId} color="cyan">
-                                  {reminder.type.replace(/_/g, ' ')} - {reminder.status}
-                                </Tag>
-                              ))}
-                            </Space>
-                          </div>
-                        )}
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              )}
+      <Spin spinning={loading}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Card 
+            style={{ 
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <Calendar
+              value={selectedDate}
+              onChange={setSelectedDate}
+              dateCellRender={dateCellRender}
+              onPanelChange={(date) => {
+                setSelectedDate(date);
+                loadAppointments(date.year(), date.month() + 1);
+              }}
+              style={{ 
+                border: 'none',
+                background: 'transparent'
+              }}
             />
           </Card>
-        )}
-      </Space>
+
+          <Card 
+            title={
+              <Space>
+                <ClockCircleOutlined />
+                <Text strong>Appointments for {selectedDate.format('MMMM DD, YYYY')}</Text>
+                <Badge count={selectedAppointments.length} showZero style={{ backgroundColor: '#1890ff' }} />
+              </Space>
+            }
+            style={{ 
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            {selectedAppointments.length > 0 ? (
+              <List
+                dataSource={selectedAppointments}
+                renderItem={(apt) => (
+                  <List.Item
+                    style={{
+                      padding: '16px',
+                      marginBottom: '12px',
+                      border: '1px solid #f0f0f0',
+                      borderRadius: '8px',
+                      background: '#fafafa',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <List.Item.Meta
+                      title={
+                        <Space>
+                          <UserOutlined />
+                          <Text strong style={{ fontSize: '16px' }}>{apt.clientName}</Text>
+                          {getStatusBadge(apt.status)}
+                        </Space>
+                      }
+                      description={
+                        <Space direction="vertical" size="small" style={{ width: '100%', marginTop: '8px' }}>
+                          <div>
+                            <Text strong>Doctor: </Text>
+                            <Text>{apt.doctorName}</Text>
+                            {apt.doctorSpecialization && (
+                              <Tag color="blue" style={{ marginLeft: 8 }}>{apt.doctorSpecialization}</Tag>
+                            )}
+                          </div>
+                          <div>
+                            <ClockCircleOutlined style={{ marginRight: 8, color: '#8c8c8c' }} />
+                            <Text>{format(new Date(apt.appointmentTime), 'MMMM dd, yyyy HH:mm')}</Text>
+                          </div>
+                          {apt.notes && (
+                            <div>
+                              <Text strong>Notes: </Text>
+                              <Text type="secondary">{apt.notes}</Text>
+                            </div>
+                          )}
+                          {apt.reminderSchedules.length > 0 && (
+                            <>
+                              <Divider style={{ margin: '8px 0' }} />
+                              <div>
+                                <Text strong>Reminders: </Text>
+                                <Space style={{ marginLeft: 8 }} wrap>
+                                  {apt.reminderSchedules.map((reminder) => (
+                                    <Tag 
+                                      key={reminder.reminderId} 
+                                      color="cyan"
+                                      style={{ borderRadius: '4px' }}
+                                    >
+                                      {reminder.type.replace(/_/g, ' ').toLowerCase()} - {reminder.status.toLowerCase()}
+                                    </Tag>
+                                  ))}
+                                </Space>
+                              </div>
+                            </>
+                          )}
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty
+                description={
+                  <Text type="secondary">No appointments scheduled for this date</Text>
+                }
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )}
+          </Card>
+        </Space>
+      </Spin>
     </div>
   );
 }
-

@@ -6,19 +6,15 @@ import org.example.getrem.enums.ReminderStatus;
 import org.example.getrem.enums.ReminderType;
 import org.example.getrem.model.Appointment;
 import org.example.getrem.model.Reminder;
-import org.example.getrem.model.ReminderRule;
 import org.example.getrem.repository.ReminderRepository;
-import org.example.getrem.repository.ReminderRuleRepository;
 import org.example.getrem.service.NotificationService;
 import org.example.getrem.service.ReminderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,12 +22,11 @@ import java.util.stream.Collectors;
 public class ReminderServiceImpl implements ReminderService {
 
     private final ReminderRepository reminderRepository;
-    private final ReminderRuleRepository reminderRuleRepository;
     private final NotificationService notificationService;
 
     @Override
     @Transactional
-    public void scheduleRemindersForAppointment(Appointment appointment, List<UUID> reminderRuleIds, List<LocalDateTime> customReminderTimes) {
+    public void scheduleRemindersForAppointment(Appointment appointment, List<String> reminderOptions, List<LocalDateTime> customReminderTimes) {
         if (appointment == null || appointment.getAppointmentTime() == null) {
             return;
         }
@@ -39,18 +34,34 @@ public class ReminderServiceImpl implements ReminderService {
         LocalDateTime appointmentTime = appointment.getAppointmentTime();
         LocalDateTime now = LocalDateTime.now();
 
-        // Schedule reminders based on reminder rules
-        if (reminderRuleIds != null && !reminderRuleIds.isEmpty()) {
-            List<ReminderRule> rules = reminderRuleRepository.findAllById(reminderRuleIds);
-            for (ReminderRule rule : rules) {
-                if (rule.getIsActive()) {
-                    LocalDateTime scheduledTime = calculateScheduledTime(appointmentTime, rule);
-                    if (scheduledTime != null && scheduledTime.isAfter(now)) {
-                        Reminder reminder = createReminder(appointment, ReminderType.TEN_DAYS_BEFORE, scheduledTime);
+        // Schedule reminders based on selected options
+        if (reminderOptions != null && !reminderOptions.isEmpty()) {
+            for (String option : reminderOptions) {
+                LocalDateTime scheduledTime = null;
+                ReminderType type = null;
+
+                switch (option) {
+                    case "IMMEDIATE":
+                        scheduledTime = now;
+                        type = ReminderType.IMMEDIATE;
+                        break;
+                    case "TEN_MINUTES_BEFORE":
+                        scheduledTime = appointmentTime.minusMinutes(10);
+                        type = ReminderType.TEN_MINUTES_BEFORE;
+                        break;
+                    case "ONE_DAY_BEFORE":
+                        scheduledTime = appointmentTime.minusDays(1);
+                        type = ReminderType.ONE_DAY_BEFORE;
+                        break;
+                }
+
+                if (scheduledTime != null && type != null) {
+                    if (scheduledTime.isAfter(now) || option.equals("IMMEDIATE")) {
+                        Reminder reminder = createReminder(appointment, type, scheduledTime);
                         reminderRepository.save(reminder);
                         
                         // Send immediately if instant
-                        if (rule.getIsInstant() != null && rule.getIsInstant()) {
+                        if (option.equals("IMMEDIATE")) {
                             sendImmediateConfirmation(reminder, appointment);
                         }
                     }
@@ -62,47 +73,27 @@ public class ReminderServiceImpl implements ReminderService {
         if (customReminderTimes != null && !customReminderTimes.isEmpty()) {
             for (LocalDateTime customTime : customReminderTimes) {
                 if (customTime.isAfter(now) && customTime.isBefore(appointmentTime)) {
-                    Reminder reminder = createReminder(appointment, ReminderType.ONE_TO_TWO_HOURS_BEFORE, customTime);
+                    Reminder reminder = createReminder(appointment, ReminderType.CUSTOM, customTime);
                     reminderRepository.save(reminder);
                 }
             }
         }
-
-        // Always send immediate confirmation
-        Reminder immediateReminder = createReminder(appointment, ReminderType.IMMEDIATE_CONFIRMATION, now);
-        reminderRepository.save(immediateReminder);
-        sendImmediateConfirmation(immediateReminder, appointment);
     }
 
     @Override
     @Transactional
     public void scheduleRemindersForAppointment(Appointment appointment) {
-        // Default behavior - use old logic for backward compatibility
+        // Default behavior - send immediate confirmation only
         if (appointment == null || appointment.getAppointmentTime() == null) {
             return;
         }
 
-        LocalDateTime appointmentTime = appointment.getAppointmentTime();
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. Immediate confirmation
-        Reminder immediateReminder = createReminder(appointment, ReminderType.IMMEDIATE_CONFIRMATION, now);
+        // Send immediate confirmation
+        Reminder immediateReminder = createReminder(appointment, ReminderType.IMMEDIATE, now);
         reminderRepository.save(immediateReminder);
         sendImmediateConfirmation(immediateReminder, appointment);
-
-        // 2. 10 days before appointment
-        LocalDateTime tenDaysBefore = appointmentTime.minusDays(10);
-        if (tenDaysBefore.isAfter(now)) {
-            Reminder tenDaysReminder = createReminder(appointment, ReminderType.TEN_DAYS_BEFORE, tenDaysBefore);
-            reminderRepository.save(tenDaysReminder);
-        }
-
-        // 3. 1-2 hours before appointment (using 1.5 hours as average)
-        LocalDateTime oneToTwoHoursBefore = appointmentTime.minus(90, ChronoUnit.MINUTES);
-        if (oneToTwoHoursBefore.isAfter(now)) {
-            Reminder shortTermReminder = createReminder(appointment, ReminderType.ONE_TO_TWO_HOURS_BEFORE, oneToTwoHoursBefore);
-            reminderRepository.save(shortTermReminder);
-        }
     }
 
     @Override
@@ -119,9 +110,9 @@ public class ReminderServiceImpl implements ReminderService {
 
     @Override
     @Transactional
-    public void rescheduleRemindersForAppointment(Appointment appointment, List<UUID> reminderRuleIds, List<LocalDateTime> customReminderTimes) {
+    public void rescheduleRemindersForAppointment(Appointment appointment, List<String> reminderOptions, List<LocalDateTime> customReminderTimes) {
         cancelRemindersForAppointment(appointment.getId());
-        scheduleRemindersForAppointment(appointment, reminderRuleIds, customReminderTimes);
+        scheduleRemindersForAppointment(appointment, reminderOptions, customReminderTimes);
     }
 
     @Override
@@ -131,25 +122,6 @@ public class ReminderServiceImpl implements ReminderService {
         scheduleRemindersForAppointment(appointment);
     }
 
-    private LocalDateTime calculateScheduledTime(LocalDateTime appointmentTime, ReminderRule rule) {
-        if (rule.getIsInstant() != null && rule.getIsInstant()) {
-            return LocalDateTime.now();
-        }
-        
-        if (rule.getIsCustom() != null && rule.getIsCustom() && rule.getCustomTime() != null) {
-            return rule.getCustomTime();
-        }
-        
-        LocalDateTime scheduledTime = appointmentTime;
-        if (rule.getHoursBefore() != null && rule.getHoursBefore() > 0) {
-            scheduledTime = scheduledTime.minusHours(rule.getHoursBefore());
-        }
-        if (rule.getMinutesBefore() != null && rule.getMinutesBefore() > 0) {
-            scheduledTime = scheduledTime.minusMinutes(rule.getMinutesBefore());
-        }
-        
-        return scheduledTime;
-    }
 
     private Reminder createReminder(Appointment appointment, ReminderType type, LocalDateTime scheduledTime) {
         Reminder reminder = new Reminder();
