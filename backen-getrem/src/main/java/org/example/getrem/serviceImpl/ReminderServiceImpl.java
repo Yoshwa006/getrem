@@ -33,12 +33,12 @@ public class ReminderServiceImpl implements ReminderService {
 
         LocalDateTime appointmentTime = appointment.getAppointmentTime();
         LocalDateTime now = LocalDateTime.now();
-
+        ReminderType type = null;
         // Schedule reminders based on selected options
         if (reminderOptions != null && !reminderOptions.isEmpty()) {
             for (String option : reminderOptions) {
                 LocalDateTime scheduledTime = null;
-                ReminderType type = null;
+
 
                 switch (option) {
                     case "IMMEDIATE":
