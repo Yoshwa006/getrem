@@ -257,8 +257,8 @@ export default function AppointmentFormAntd({ appointment, visible, onCancel, on
       destroyOnClose
       styles={{
         body: { padding: '24px' },
-        header: { padding: '20px 24px', borderBottom: '1px solid #f0f0f0' },
-        footer: { padding: '12px 24px', borderTop: '1px solid #f0f0f0' }
+        header: { padding: '20px 24px', borderBottom: '1px solid var(--modal-border)' },
+        footer: { padding: '12px 24px', borderTop: '1px solid var(--modal-border)' }
       }}
     >
       <Spin spinning={loadingData}>
@@ -391,8 +391,8 @@ export default function AppointmentFormAntd({ appointment, visible, onCancel, on
             size="small" 
             style={{ 
               marginBottom: 16, 
-              background: '#fafafa',
-              border: '1px solid #e8e8e8',
+              background: 'var(--background-tertiary)',
+              border: '1px solid var(--border-color-light)',
               borderRadius: '8px'
             }}
           >
@@ -441,8 +441,8 @@ export default function AppointmentFormAntd({ appointment, visible, onCancel, on
               size="small"
               style={{ 
                 marginBottom: 12, 
-                background: '#fff',
-                border: '1px solid #e8e8e8',
+                background: 'var(--background-base)',
+                border: '1px solid var(--border-color-light)',
                 borderRadius: '8px'
               }}
               bodyStyle={{ padding: '12px' }}

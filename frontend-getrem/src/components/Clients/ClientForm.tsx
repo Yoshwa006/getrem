@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Modal, Form, Input, InputNumber, Select, message, Space } from 'antd';
 import { clientsApi } from '../../services/api';
 import type { Client, CreateClientRequest, UpdateClientRequest, Gender } from '../../types';
 import './ClientForm.css';
+
+const { TextArea } = Input;
 
 interface ClientFormProps {
   client?: Client | null;
@@ -10,20 +13,12 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ client, onClose, onSuccess }: ClientFormProps) {
-  const [formData, setFormData] = useState<CreateClientRequest>({
-    name: '',
-    age: undefined,
-    gender: undefined,
-    phone: '',
-    email: '',
-    notes: '',
-  });
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (client) {
-      setFormData({
+      form.setFieldsValue({
         name: client.name || '',
         age: client.age,
         gender: client.gender,
@@ -31,28 +26,27 @@ export default function ClientForm({ client, onClose, onSuccess }: ClientFormPro
         email: client.email || '',
         notes: client.notes || '',
       });
+    } else {
+      form.resetFields();
     }
-  }, [client]);
+  }, [client, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: CreateClientRequest) => {
     setLoading(true);
-    setError(null);
-
     try {
       if (client) {
-        await clientsApi.update(client.id, formData as UpdateClientRequest);
+        await clientsApi.update(client.id, values as UpdateClientRequest);
       } else {
-        await clientsApi.create(formData);
+        await clientsApi.create(values);
       }
       onSuccess();
     } catch (err: any) {
       const errorData = err.response?.data;
       if (errorData?.errors) {
         const errorMessages = Object.values(errorData.errors).flat().join(', ');
-        setError(errorMessages);
+        message.error(errorMessages);
       } else {
-        setError(errorData?.message || 'Failed to save client');
+        message.error(errorData?.message || 'Failed to save client');
       }
     } finally {
       setLoading(false);
@@ -60,106 +54,101 @@ export default function ClientForm({ client, onClose, onSuccess }: ClientFormPro
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{client ? 'Edit Client' : 'Create Client'}</h3>
-          <button onClick={onClose} className="close-btn">&times;</button>
-        </div>
+    <Modal
+      title={client ? 'Edit Client' : 'Create Client'}
+      open={true}
+      onCancel={onClose}
+      footer={null}
+      width={600}
+      destroyOnClose
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="client-form"
+      >
+        <Form.Item
+          name="name"
+          label="Name"
+          rules={[{ required: true, message: 'Please enter client name' }]}
+        >
+          <Input placeholder="Enter client name" size="large" />
+        </Form.Item>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="name">Name *</label>
-            <input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
+        <Space.Compact style={{ width: '100%' }}>
+          <Form.Item
+            name="age"
+            label="Age"
+            style={{ flex: 1, marginRight: 12 }}
+          >
+            <InputNumber
+              placeholder="Age"
+              min={0}
+              max={150}
+              style={{ width: '100%' }}
+              size="large"
             />
-          </div>
+          </Form.Item>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="age">Age</label>
-              <input
-                id="age"
-                type="number"
-                min="0"
-                max="150"
-                value={formData.age || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    age: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-              />
-            </div>
+          <Form.Item
+            name="gender"
+            label="Gender"
+            style={{ flex: 1 }}
+          >
+            <Select placeholder="Select Gender" size="large">
+              <Select.Option value="MALE">Male</Select.Option>
+              <Select.Option value="FEMALE">Female</Select.Option>
+              <Select.Option value="OTHER">Other</Select.Option>
+            </Select>
+          </Form.Item>
+        </Space.Compact>
 
-            <div className="form-group">
-              <label htmlFor="gender">Gender</label>
-              <select
-                id="gender"
-                value={formData.gender || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    gender: e.target.value ? (e.target.value as Gender) : undefined,
-                  })
-                }
-              >
-                <option value="">Select Gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-          </div>
+        <Form.Item
+          name="phone"
+          label="Phone"
+        >
+          <Input placeholder="Enter phone number" size="large" />
+        </Form.Item>
 
-          <div className="form-group">
-            <label htmlFor="phone">Phone</label>
-            <input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
+        <Form.Item
+          name="email"
+          label="Email"
+          rules={[{ type: 'email', message: 'Please enter a valid email' }]}
+        >
+          <Input placeholder="Enter email address" size="large" />
+        </Form.Item>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-          </div>
+        <Form.Item
+          name="notes"
+          label="Notes"
+        >
+          <TextArea
+            placeholder="Enter any additional notes"
+            rows={3}
+            size="large"
+          />
+        </Form.Item>
 
-          <div className="form-group">
-            <label htmlFor="notes">Notes</label>
-            <textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="btn btn-secondary">
+        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="ant-btn ant-btn-default"
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="ant-btn ant-btn-primary"
+              disabled={loading}
+            >
               {loading ? 'Saving...' : client ? 'Update' : 'Create'}
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 }
-

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Modal, Form, Select, InputNumber, DatePicker, Input, message, Space } from 'antd';
 import { paymentsApi, treatmentsApi } from '../../services/api';
 import type { Treatment, CreatePaymentRequest } from '../../types';
 import { PaymentMethod } from '../../types';
-
-import './PaymentForm.css';
+import dayjs from 'dayjs';
 
 interface PaymentFormProps {
   onClose: () => void;
@@ -11,16 +11,10 @@ interface PaymentFormProps {
 }
 
 export default function PaymentForm({ onClose, onSuccess }: PaymentFormProps) {
+  const [form] = Form.useForm();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
-  const [formData, setFormData] = useState<CreatePaymentRequest>({
-    treatmentId: '',
-    amountPaid: 0,
-    paymentDate: new Date().toISOString().split('T')[0],
-    method: PaymentMethod.CASH,
-    staffName: '',
-  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   useEffect(() => {
     loadTreatments();
@@ -28,28 +22,33 @@ export default function PaymentForm({ onClose, onSuccess }: PaymentFormProps) {
 
   const loadTreatments = async () => {
     try {
+      setLoadingData(true);
       const response = await treatmentsApi.getAll(0, 1000);
       setTreatments(response.content || []);
     } catch (err) {
       console.error('Failed to load treatments', err);
+      message.error('Failed to load treatments');
+    } finally {
+      setLoadingData(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: any) => {
     setLoading(true);
-    setError(null);
-
     try {
-      await paymentsApi.create(formData);
+      const payload: CreatePaymentRequest = {
+        ...values,
+        paymentDate: values.paymentDate.format('YYYY-MM-DD'),
+      };
+      await paymentsApi.create(payload);
       onSuccess();
     } catch (err: any) {
       const errorData = err.response?.data;
       if (errorData?.errors) {
         const errorMessages = Object.values(errorData.errors).flat().join(', ');
-        setError(errorMessages);
+        message.error(errorMessages);
       } else {
-        setError(errorData?.message || 'Failed to create payment');
+        message.error(errorData?.message || 'Failed to create payment');
       }
     } finally {
       setLoading(false);
@@ -57,101 +56,114 @@ export default function PaymentForm({ onClose, onSuccess }: PaymentFormProps) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Create Payment</h3>
-          <button onClick={onClose} className="close-btn">
-            &times;
-          </button>
-        </div>
+    <Modal
+      title="Create Payment"
+      open={true}
+      onCancel={onClose}
+      footer={null}
+      width={600}
+      destroyOnClose
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={{
+          paymentDate: dayjs(),
+          method: PaymentMethod.CASH,
+        }}
+      >
+        <Form.Item
+          name="treatmentId"
+          label="Treatment"
+          rules={[{ required: true, message: 'Please select a treatment' }]}
+        >
+          <Select
+            placeholder="Select Treatment"
+            size="large"
+            loading={loadingData}
+          >
+            {treatments.map((treatment) => (
+              <Select.Option key={treatment.id} value={treatment.id}>
+                {treatment.description || 'Treatment'} - ₹{treatment.totalAmount.toFixed(2)}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
+        <Form.Item
+          name="amountPaid"
+          label="Amount Paid"
+          rules={[
+            { required: true, message: 'Please enter amount paid' },
+            { type: 'number', min: 0, message: 'Amount must be positive' },
+          ]}
+        >
+          <InputNumber
+            placeholder="Enter amount paid"
+            style={{ width: '100%' }}
+            size="large"
+            min={0}
+            step={0.01}
+            prefix="₹"
+          />
+        </Form.Item>
 
-          <div className="form-group">
-            <label htmlFor="treatmentId">Treatment *</label>
-            <select
-              id="treatmentId"
-              value={formData.treatmentId}
-              onChange={(e) => setFormData({ ...formData, treatmentId: e.target.value })}
-              required
+        <Space.Compact style={{ width: '100%' }}>
+          <Form.Item
+            name="paymentDate"
+            label="Payment Date"
+            rules={[{ required: true, message: 'Please select payment date' }]}
+            style={{ flex: 1, marginRight: 12 }}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              size="large"
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="method"
+            label="Payment Method"
+            rules={[{ required: true, message: 'Please select payment method' }]}
+            style={{ flex: 1 }}
+          >
+            <Select size="large">
+              <Select.Option value={PaymentMethod.CASH}>Cash</Select.Option>
+              <Select.Option value={PaymentMethod.CARD}>Card</Select.Option>
+              <Select.Option value={PaymentMethod.UPI}>UPI</Select.Option>
+              <Select.Option value={PaymentMethod.OTHER}>Other</Select.Option>
+            </Select>
+          </Form.Item>
+        </Space.Compact>
+
+        <Form.Item
+          name="staffName"
+          label="Staff Name"
+        >
+          <Input placeholder="Enter staff name" size="large" />
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="ant-btn ant-btn-default"
             >
-              <option value="">Select Treatment</option>
-              {treatments.map((treatment) => (
-                <option key={treatment.id} value={treatment.id}>
-                  {treatment.description || 'Treatment'} - ₹{treatment.totalAmount.toFixed(2)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="amountPaid">Amount Paid *</label>
-            <input
-              id="amountPaid"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.amountPaid}
-              onChange={(e) =>
-                setFormData({ ...formData, amountPaid: parseFloat(e.target.value) || 0 })
-              }
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="paymentDate">Payment Date *</label>
-              <input
-                id="paymentDate"
-                type="date"
-                value={formData.paymentDate}
-                onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="method">Payment Method *</label>
-              <select
-                id="method"
-                value={formData.method}
-                onChange={(e) =>
-                  setFormData({ ...formData, method: e.target.value as PaymentMethod })
-                }
-                required
-              >
-                <option value={PaymentMethod.CASH}>Cash</option>
-                <option value={PaymentMethod.CARD}>Card</option>
-                <option value={PaymentMethod.UPI}>UPI</option>
-                <option value={PaymentMethod.OTHER}>Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="staffName">Staff Name</label>
-            <input
-              id="staffName"
-              type="text"
-              value={formData.staffName}
-              onChange={(e) => setFormData({ ...formData, staffName: e.target.value })}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="ant-btn ant-btn-primary"
+              disabled={loading}
+            >
               {loading ? 'Creating...' : 'Create'}
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 }
-

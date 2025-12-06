@@ -1,34 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Popconfirm, message, Card, Spin } from 'antd';
+import { Table, Button, Space, Popconfirm, message, Card, Tag, Spin } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { clientsApi } from '../../services/api';
-import type { Client } from '../../types';
-import ClientForm from './ClientForm';
-import './ClientsList.css';
+import { doctorsApi } from '../../services/api';
+import type { Doctor } from '../../types';
+import DoctorForm from './DoctorForm';
+import './DoctorsList.css';
 
-export default function ClientsList() {
-  const [clients, setClients] = useState<Client[]>([]);
+export default function DoctorsList() {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
-  const [total, setTotal] = useState(0);
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
 
   useEffect(() => {
-    loadClients();
-  }, [page]);
+    loadDoctors();
+  }, []);
 
-  const loadClients = async () => {
+  const loadDoctors = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await clientsApi.getAll(page - 1, pageSize);
-      setClients(response.content || []);
-      setTotal(response.totalElements || 0);
+      const response = await doctorsApi.getAll();
+      setDoctors(response || []);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to load clients';
+      const errorMsg = err.response?.data?.message || 'Failed to load doctors';
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -37,35 +33,35 @@ export default function ClientsList() {
   };
 
   const handleCreate = () => {
-    setEditingClient(null);
+    setEditingDoctor(null);
     setShowForm(true);
   };
 
-  const handleEdit = (client: Client) => {
-    setEditingClient(client);
+  const handleEdit = (doctor: Doctor) => {
+    setEditingDoctor(doctor);
     setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await clientsApi.delete(id);
-      message.success('Client deleted successfully');
-      loadClients();
+      await doctorsApi.delete(id);
+      message.success('Doctor deleted successfully');
+      loadDoctors();
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to delete client';
+      const errorMsg = err.response?.data?.message || 'Failed to delete doctor';
       message.error(errorMsg);
     }
   };
 
   const handleFormClose = () => {
     setShowForm(false);
-    setEditingClient(null);
+    setEditingDoctor(null);
   };
 
   const handleFormSuccess = () => {
     handleFormClose();
-    loadClients();
-    message.success(editingClient ? 'Client updated successfully' : 'Client created successfully');
+    loadDoctors();
+    message.success(editingDoctor ? 'Doctor updated successfully' : 'Doctor created successfully');
   };
 
   const columns = [
@@ -73,26 +69,14 @@ export default function ClientsList() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      sorter: (a: Client, b: Client) => a.name.localeCompare(b.name),
+      sorter: (a: Doctor, b: Doctor) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-      render: (age: number | undefined) => age || '-',
-      sorter: (a: Client, b: Client) => (a.age || 0) - (b.age || 0),
-    },
-    {
-      title: 'Gender',
-      dataIndex: 'gender',
-      key: 'gender',
-      render: (gender: string | undefined) => gender || '-',
-    },
-    {
-      title: 'Phone',
-      dataIndex: 'phone',
-      key: 'phone',
-      render: (phone: string | undefined) => phone || '-',
+      title: 'Specialization',
+      dataIndex: 'specialization',
+      key: 'specialization',
+      render: (specialization: string | undefined) => 
+        specialization ? <Tag color="blue">{specialization}</Tag> : '-',
     },
     {
       title: 'Email',
@@ -101,10 +85,31 @@ export default function ClientsList() {
       render: (email: string | undefined) => email || '-',
     },
     {
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+      render: (phone: string | undefined) => phone || '-',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'active',
+      key: 'active',
+      render: (active: boolean | undefined) => (
+        <Tag color={active !== false ? 'green' : 'red'}>
+          {active !== false ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+      filters: [
+        { text: 'Active', value: true },
+        { text: 'Inactive', value: false },
+      ],
+      onFilter: (value: any, record: Doctor) => (record.active !== false) === value,
+    },
+    {
       title: 'Actions',
       key: 'actions',
       width: 150,
-      render: (_: any, record: Client) => (
+      render: (_: any, record: Doctor) => (
         <Space size="small">
           <Button
             type="default"
@@ -115,8 +120,8 @@ export default function ClientsList() {
             Edit
           </Button>
           <Popconfirm
-            title="Delete Client"
-            description="Are you sure you want to delete this client?"
+            title="Delete Doctor"
+            description="Are you sure you want to delete this doctor?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -139,20 +144,20 @@ export default function ClientsList() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h2>Clients</h2>
+        <h2>Doctors</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleCreate}
           size="large"
         >
-          Add Client
+          Add Doctor
         </Button>
       </div>
 
       {showForm && (
-        <ClientForm
-          client={editingClient}
+        <DoctorForm
+          doctor={editingDoctor}
           onClose={handleFormClose}
           onSuccess={handleFormSuccess}
         />
@@ -162,18 +167,15 @@ export default function ClientsList() {
         <Spin spinning={loading}>
           <Table
             columns={columns}
-            dataSource={clients}
+            dataSource={doctors}
             rowKey="id"
             pagination={{
-              current: page,
-              pageSize: pageSize,
-              total: total,
-              onChange: (page) => setPage(page),
+              pageSize: 20,
               showSizeChanger: false,
-              showTotal: (total) => `Total ${total} clients`,
+              showTotal: (total) => `Total ${total} doctors`,
             }}
             locale={{
-              emptyText: 'No clients found. Create your first client!',
+              emptyText: 'No doctors found. Create your first doctor!',
             }}
           />
         </Spin>
@@ -181,3 +183,4 @@ export default function ClientsList() {
     </div>
   );
 }
+

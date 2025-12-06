@@ -20,7 +20,7 @@ import { appointmentsApi, doctorsApi } from '../../services/api';
 import type { CalendarAppointmentResponse, AppointmentStatus, Doctor } from '../../types';
 import { format } from 'date-fns';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function CalendarViewAntd() {
   const [appointments, setAppointments] = useState<CalendarAppointmentResponse[]>([]);
@@ -98,7 +98,7 @@ export default function CalendarViewAntd() {
           </div>
         ))}
         {dayAppointments.length > 2 && (
-          <div style={{ fontSize: '11px', color: '#8c8c8c', fontWeight: 500 }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>
             +{dayAppointments.length - 2} more
           </div>
         )}
@@ -128,12 +128,9 @@ export default function CalendarViewAntd() {
   const selectedAppointments = getAppointmentsForDate(selectedDate);
 
   return (
-    <div>
+    <div className="page-container">
       <div className="page-header">
-        <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <CalendarOutlined />
-          Calendar View
-        </Title>
+        <h2>Calendar View</h2>
         <Select
           placeholder="Filter by doctor"
           allowClear
@@ -153,13 +150,7 @@ export default function CalendarViewAntd() {
 
       <Spin spinning={loading}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <Card 
-            style={{ 
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-            }}
-            bodyStyle={{ padding: '24px' }}
-          >
+          <Card>
             <Calendar
               value={selectedDate}
               onChange={setSelectedDate}
@@ -180,14 +171,9 @@ export default function CalendarViewAntd() {
               <Space>
                 <ClockCircleOutlined />
                 <Text strong>Appointments for {selectedDate.format('MMMM DD, YYYY')}</Text>
-                <Badge count={selectedAppointments.length} showZero style={{ backgroundColor: '#1890ff' }} />
+                <Badge count={selectedAppointments.length} showZero style={{ backgroundColor: 'var(--primary-color)' }} />
               </Space>
             }
-            style={{ 
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-            }}
-            bodyStyle={{ padding: '24px' }}
           >
             {selectedAppointments.length > 0 ? (
               <List
@@ -197,9 +183,9 @@ export default function CalendarViewAntd() {
                     style={{
                       padding: '16px',
                       marginBottom: '12px',
-                      border: '1px solid #f0f0f0',
+                      border: '1px solid var(--border-color-light)',
                       borderRadius: '8px',
-                      background: '#fafafa',
+                      background: 'var(--background-tertiary)',
                       transition: 'all 0.2s'
                     }}
                   >
@@ -221,7 +207,7 @@ export default function CalendarViewAntd() {
                             )}
                           </div>
                           <div>
-                            <ClockCircleOutlined style={{ marginRight: 8, color: '#8c8c8c' }} />
+                            <ClockCircleOutlined style={{ marginRight: 8, color: 'var(--text-tertiary)' }} />
                             <Text>{format(new Date(apt.appointmentTime), 'MMMM dd, yyyy HH:mm')}</Text>
                           </div>
                           {apt.notes && (

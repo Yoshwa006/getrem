@@ -5,6 +5,42 @@
 }
 
 :root {
+  /* Transitions */
+  --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-theme: all 0.15s ease-in-out;
+  
+  /* Spacing System (12-16px based) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  
+  /* Border Radius (Soft rounded corners) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* Light Theme (Default) */
+:root.light {
   /* Enterprise Color Palette */
   --primary-color: #1890ff;
   --primary-hover: #40a9ff;
@@ -19,46 +55,164 @@
   --text-secondary: #595959;
   --text-tertiary: #8c8c8c;
   --text-disabled: #bfbfbf;
+  --text-inverse: #ffffff;
+  
+  /* Borders */
   --border-color: #d9d9d9;
   --border-color-light: #f0f0f0;
+  --border-color-dark: #bfbfbf;
+  
+  /* Backgrounds */
   --background-base: #ffffff;
   --background-secondary: #fafafa;
   --background-tertiary: #f5f5f5;
+  --background-hover: #f0f0f0;
+  --background-active: #e6f7ff;
   
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
+  /* Navbar */
+  --navbar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --navbar-text: rgba(255, 255, 255, 0.9);
+  --navbar-text-hover: #ffffff;
+  --navbar-active-bg: rgba(255, 255, 255, 0.25);
+  --navbar-hover-bg: rgba(255, 255, 255, 0.15);
   
-  /* Typography */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-base: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 24px;
-  --font-size-3xl: 32px;
+  /* Shadows (Subtle, professional) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 12px 24px 0 rgba(0, 0, 0, 0.12);
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Table */
+  --table-header-bg: #fafafa;
+  --table-row-hover: #f5f5f5;
+  --table-border: #f0f0f0;
   
-  /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* Modal */
+  --modal-bg: #ffffff;
+  --modal-border: #f0f0f0;
+  --modal-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
   
-  /* Transitions */
-  --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Input */
+  --input-bg: #ffffff;
+  --input-border: #d9d9d9;
+  --input-border-hover: #40a9ff;
+  --input-border-focus: #1890ff;
+  --input-focus-shadow: rgba(24, 144, 255, 0.1);
+  
+  /* Card */
+  --card-bg: #ffffff;
+  --card-border: #f0f0f0;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  /* Calendar */
+  --calendar-bg: #ffffff;
+  --calendar-date-hover: #f5f5f5;
+  --calendar-date-selected: #1890ff;
+  --calendar-date-selected-text: #ffffff;
+  
+  /* Select Dropdown */
+  --dropdown-bg: #ffffff;
+  --dropdown-item-hover: #f5f5f5;
+  --dropdown-item-selected: rgba(24, 144, 255, 0.1);
+  
+  /* Scrollbar */
+  --scrollbar-track: #f5f5f5;
+  --scrollbar-thumb: #d9d9d9;
+  --scrollbar-thumb-hover: #8c8c8c;
+}
+
+/* Dark Theme */
+:root.dark {
+  /* Enterprise Color Palette (adjusted for dark) */
+  --primary-color: #1890ff;
+  --primary-hover: #40a9ff;
+  --primary-active: #096dd9;
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #ff4d4f;
+  --info-color: #1890ff;
+  
+  /* Neutral Colors */
+  --text-primary: #e6e6e6;
+  --text-secondary: #b3b3b3;
+  --text-tertiary: #8c8c8c;
+  --text-disabled: #595959;
+  --text-inverse: #1f1f1f;
+  
+  /* Borders */
+  --border-color: #434343;
+  --border-color-light: #303030;
+  --border-color-dark: #595959;
+  
+  /* Backgrounds */
+  --background-base: #1f1f1f;
+  --background-secondary: #141414;
+  --background-tertiary: #262626;
+  --background-hover: #303030;
+  --background-active: #111b26;
+  
+  /* Navbar */
+  --navbar-bg: linear-gradient(135deg, #434343 0%, #2d2d2d 100%);
+  --navbar-text: rgba(255, 255, 255, 0.85);
+  --navbar-text-hover: #ffffff;
+  --navbar-active-bg: rgba(255, 255, 255, 0.2);
+  --navbar-hover-bg: rgba(255, 255, 255, 0.1);
+  
+  /* Shadows (Subtle, professional) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 12px 24px 0 rgba(0, 0, 0, 0.7);
+  
+  /* Table */
+  --table-header-bg: #262626;
+  --table-row-hover: #303030;
+  --table-border: #303030;
+  
+  /* Modal */
+  --modal-bg: #1f1f1f;
+  --modal-border: #303030;
+  --modal-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.5), 0 3px 6px -4px rgba(0, 0, 0, 0.6), 0 9px 28px 8px rgba(0, 0, 0, 0.4);
+  
+  /* Input */
+  --input-bg: #141414;
+  --input-border: #434343;
+  --input-border-hover: #40a9ff;
+  --input-border-focus: #1890ff;
+  --input-focus-shadow: rgba(24, 144, 255, 0.2);
+  
+  /* Card */
+  --card-bg: #1f1f1f;
+  --card-border: #303030;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+  
+  /* Calendar */
+  --calendar-bg: #1f1f1f;
+  --calendar-date-hover: #303030;
+  --calendar-date-selected: #1890ff;
+  --calendar-date-selected-text: #ffffff;
+  
+  /* Select Dropdown */
+  --dropdown-bg: #1f1f1f;
+  --dropdown-item-hover: #303030;
+  --dropdown-item-selected: rgba(24, 144, 255, 0.2);
+  
+  /* Scrollbar */
+  --scrollbar-track: #262626;
+  --scrollbar-thumb: #434343;
+  --scrollbar-thumb-hover: #595959;
+}
+
+/* Apply theme transition */
+* {
+  transition: background-color var(--transition-theme), 
+              color var(--transition-theme),
+              border-color var(--transition-theme),
+              box-shadow var(--transition-theme);
 }
 
 body {
@@ -110,16 +264,16 @@ h4 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background-tertiary);
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Focus Styles */
@@ -131,5 +285,5 @@ h4 {
 /* Selection */
 ::selection {
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-inverse);
 }

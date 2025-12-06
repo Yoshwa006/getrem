@@ -9,29 +9,38 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  transition: var(--transition-theme);
+}
+
+:root.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .modal-content {
-  background: white;
-  border-radius: 8px;
+  background: var(--modal-bg);
+  border-radius: var(--radius-lg);
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--modal-shadow);
+  border: 1px solid var(--modal-border);
+  transition: var(--transition-theme);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--modal-border);
+  transition: var(--transition-theme);
 }
 
 .modal-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
+  transition: var(--transition-theme);
 }
 
 .close-btn {
@@ -39,32 +48,34 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #999;
+  color: var(--text-secondary);
   padding: 0;
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--transition-base);
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .modal-content form {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  color: #555;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
   font-weight: 500;
+  transition: var(--transition-theme);
 }
 
 .form-group input,
@@ -72,31 +83,34 @@
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-family: inherit;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  transition: var(--transition-base);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--input-focus-shadow);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
 }
 
 @media (max-width: 768px) {
@@ -104,4 +118,3 @@
     grid-template-columns: 1fr;
   }
 }
-

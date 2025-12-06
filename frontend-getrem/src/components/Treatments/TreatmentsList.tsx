@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
+import { Table, Button, Card, message, Tag, Typography } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { treatmentsApi } from '../../services/api';
 import type { Treatment } from '../../types';
 import TreatmentForm from './TreatmentForm';
 import { format } from 'date-fns';
-import './TreatmentsList.css';
+
+const { Text } = Typography;
 
 export default function TreatmentsList() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadTreatments();
@@ -20,12 +23,12 @@ export default function TreatmentsList() {
   const loadTreatments = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await treatmentsApi.getAll(page, 20);
+      const response = await treatmentsApi.getAll(page - 1, pageSize);
       setTreatments(response.content || []);
-      setTotalPages(response.totalPages || 0);
+      setTotal(response.totalElements || 0);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load treatments');
+      const errorMsg = err.response?.data?.message || 'Failed to load treatments';
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -42,6 +45,7 @@ export default function TreatmentsList() {
   const handleFormSuccess = () => {
     handleFormClose();
     loadTreatments();
+    message.success('Treatment created successfully');
   };
 
   const calculateTotalPaid = (treatment: Treatment) => {
@@ -52,89 +56,95 @@ export default function TreatmentsList() {
     return treatment.totalAmount - calculateTotalPaid(treatment);
   };
 
-
-  if (loading && treatments.length === 0) {
-    return <div className="loading">Loading treatments...</div>;
-  }
+  const columns = [
+    {
+      title: 'Client ID',
+      dataIndex: 'clientId',
+      key: 'clientId',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (desc: string) => desc || '-',
+      ellipsis: true,
+    },
+    {
+      title: 'Total Amount',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      render: (amount: number) => (
+        <Text strong>₹{amount.toFixed(2)}</Text>
+      ),
+      sorter: (a: Treatment, b: Treatment) => a.totalAmount - b.totalAmount,
+    },
+    {
+      title: 'Paid',
+      key: 'paid',
+      render: (_: any, record: Treatment) => {
+        const paid = calculateTotalPaid(record);
+        return <Text>₹{paid.toFixed(2)}</Text>;
+      },
+    },
+    {
+      title: 'Remaining',
+      key: 'remaining',
+      render: (_: any, record: Treatment) => {
+        const remaining = calculateRemaining(record);
+        return (
+          <Tag color={remaining > 0 ? 'orange' : 'green'}>
+            ₹{remaining.toFixed(2)}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date: string) => format(new Date(date), 'MMM dd, yyyy'),
+      sorter: (a: Treatment, b: Treatment) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    },
+  ];
 
   return (
-    <div className="treatments-list">
+    <div className="page-container">
       <div className="page-header">
         <h2>Treatments</h2>
-        <button onClick={handleCreate} className="btn btn-primary">
-          + New Treatment
-        </button>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleCreate}
+          size="large"
+        >
+          New Treatment
+        </Button>
       </div>
-
-      {error && <div className="error-message">{error}</div>}
 
       {showForm && (
         <TreatmentForm onClose={handleFormClose} onSuccess={handleFormSuccess} />
       )}
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Client ID</th>
-              <th>Description</th>
-              <th>Total Amount</th>
-              <th>Paid</th>
-              <th>Remaining</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {treatments.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="empty-state">
-                  No treatments found. Create your first treatment!
-                </td>
-              </tr>
-            ) : (
-              treatments.map((treatment) => {
-                const totalPaid = calculateTotalPaid(treatment);
-                const remaining = calculateRemaining(treatment);
-                return (
-                  <tr key={treatment.id}>
-                    <td>{treatment.clientId}</td>
-                    <td>{treatment.description || '-'}</td>
-                    <td>₹{treatment.totalAmount.toFixed(2)}</td>
-                    <td>₹{totalPaid.toFixed(2)}</td>
-                    <td className={remaining > 0 ? 'remaining-amount' : 'paid-full'}>
-                      ₹{remaining.toFixed(2)}
-                    </td>
-                    <td>{format(new Date(treatment.createdAt), 'MMM dd, yyyy')}</td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="btn btn-sm"
-          >
-            Previous
-          </button>
-          <span>
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="btn btn-sm"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={treatments}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize: pageSize,
+            total: total,
+            onChange: (page) => setPage(page),
+            showSizeChanger: false,
+            showTotal: (total) => `Total ${total} treatments`,
+          }}
+          locale={{
+            emptyText: 'No treatments found. Create your first treatment!',
+          }}
+        />
+      </Card>
     </div>
   );
 }
-

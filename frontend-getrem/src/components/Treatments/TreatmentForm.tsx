@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Modal, Form, Select, InputNumber, Input, message, Space } from 'antd';
 import { treatmentsApi, clientsApi, appointmentsApi } from '../../services/api';
 import type { Client, Appointment, CreateTreatmentRequest } from '../../types';
-import './TreatmentForm.css';
+
+const { TextArea } = Input;
 
 interface TreatmentFormProps {
   onClose: () => void;
@@ -9,63 +11,62 @@ interface TreatmentFormProps {
 }
 
 export default function TreatmentForm({ onClose, onSuccess }: TreatmentFormProps) {
+  const [form] = Form.useForm();
   const [clients, setClients] = useState<Client[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [formData, setFormData] = useState<CreateTreatmentRequest>({
-    clientId: '',
-    appointmentId: undefined,
-    totalAmount: 0,
-    description: '',
-  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
 
   useEffect(() => {
     loadClients();
   }, []);
 
   useEffect(() => {
-    if (formData.clientId) {
+    if (selectedClientId) {
       loadAppointments();
+    } else {
+      setAppointments([]);
     }
-  }, [formData.clientId]);
+  }, [selectedClientId]);
 
   const loadClients = async () => {
     try {
+      setLoadingData(true);
       const response = await clientsApi.getAll(0, 1000);
       setClients(response.content || []);
     } catch (err) {
       console.error('Failed to load clients', err);
+      message.error('Failed to load clients');
+    } finally {
+      setLoadingData(false);
     }
   };
 
   const loadAppointments = async () => {
     try {
-      const data = await appointmentsApi.getByClientId(formData.clientId);
+      const data = await appointmentsApi.getByClientId(selectedClientId);
       setAppointments(data || []);
     } catch (err) {
       console.error('Failed to load appointments', err);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: CreateTreatmentRequest) => {
     setLoading(true);
-    setError(null);
-
     try {
       await treatmentsApi.create({
-        ...formData,
-        appointmentId: formData.appointmentId || undefined,
+        ...values,
+        appointmentId: values.appointmentId || undefined,
       });
       onSuccess();
     } catch (err: any) {
       const errorData = err.response?.data;
       if (errorData?.errors) {
         const errorMessages = Object.values(errorData.errors).flat().join(', ');
-        setError(errorMessages);
+        message.error(errorMessages);
       } else {
-        setError(errorData?.message || 'Failed to create treatment');
+        message.error(errorData?.message || 'Failed to create treatment');
       }
     } finally {
       setLoading(false);
@@ -73,90 +74,107 @@ export default function TreatmentForm({ onClose, onSuccess }: TreatmentFormProps
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Create Treatment</h3>
-          <button onClick={onClose} className="close-btn">
-            &times;
-          </button>
-        </div>
+    <Modal
+      title="Create Treatment"
+      open={true}
+      onCancel={onClose}
+      footer={null}
+      width={600}
+      destroyOnClose
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+      >
+        <Form.Item
+          name="clientId"
+          label="Client"
+          rules={[{ required: true, message: 'Please select a client' }]}
+        >
+          <Select
+            placeholder="Select Client"
+            size="large"
+            onChange={(value) => {
+              setSelectedClientId(value);
+              form.setFieldValue('appointmentId', undefined);
+            }}
+            loading={loadingData}
+          >
+            {clients.map((client) => (
+              <Select.Option key={client.id} value={client.id}>
+                {client.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
+        <Form.Item
+          name="appointmentId"
+          label="Appointment (Optional)"
+        >
+          <Select
+            placeholder="No Appointment"
+            size="large"
+            disabled={!selectedClientId}
+            allowClear
+          >
+            {appointments.map((apt) => (
+              <Select.Option key={apt.id} value={apt.id}>
+                {new Date(apt.appointmentTime).toLocaleString()}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
 
-          <div className="form-group">
-            <label htmlFor="clientId">Client *</label>
-            <select
-              id="clientId"
-              value={formData.clientId}
-              onChange={(e) => setFormData({ ...formData, clientId: e.target.value, appointmentId: undefined })}
-              required
+        <Form.Item
+          name="totalAmount"
+          label="Total Amount"
+          rules={[
+            { required: true, message: 'Please enter total amount' },
+            { type: 'number', min: 0, message: 'Amount must be positive' },
+          ]}
+        >
+          <InputNumber
+            placeholder="Enter total amount"
+            style={{ width: '100%' }}
+            size="large"
+            min={0}
+            step={0.01}
+            prefix="₹"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="description"
+          label="Description"
+        >
+          <TextArea
+            placeholder="Enter treatment description"
+            rows={3}
+            size="large"
+          />
+        </Form.Item>
+
+        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="ant-btn ant-btn-default"
             >
-              <option value="">Select Client</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="appointmentId">Appointment (Optional)</label>
-            <select
-              id="appointmentId"
-              value={formData.appointmentId || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, appointmentId: e.target.value || undefined })
-              }
-              disabled={!formData.clientId}
-            >
-              <option value="">No Appointment</option>
-              {appointments.map((apt) => (
-                <option key={apt.id} value={apt.id}>
-                  {new Date(apt.appointmentTime).toLocaleString()}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="totalAmount">Total Amount *</label>
-            <input
-              id="totalAmount"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.totalAmount}
-              onChange={(e) =>
-                setFormData({ ...formData, totalAmount: parseFloat(e.target.value) || 0 })
-              }
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button
+              type="submit"
+              className="ant-btn ant-btn-primary"
+              disabled={loading}
+            >
               {loading ? 'Creating...' : 'Create'}
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 }
-

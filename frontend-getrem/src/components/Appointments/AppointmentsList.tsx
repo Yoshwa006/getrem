@@ -17,7 +17,7 @@ import type { Appointment, AppointmentStatus } from '../../types';
 import AppointmentFormAntd from './AppointmentFormAntd';
 import { format } from 'date-fns';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function AppointmentsList() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -188,22 +188,14 @@ export default function AppointmentsList() {
   ];
 
   return (
-    <div>
+    <div className="page-container">
       <div className="page-header">
-        <Title level={2} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <CalendarOutlined />
-          Appointments
-        </Title>
+        <h2>Appointments</h2>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
           onClick={handleCreate}
           size="large"
-          style={{ 
-            height: '40px',
-            borderRadius: '6px',
-            fontWeight: 500
-          }}
         >
           New Appointment
         </Button>
@@ -213,8 +205,7 @@ export default function AppointmentsList() {
         <Card 
           style={{ 
             marginBottom: 16, 
-            borderColor: '#ff4d4f',
-            borderRadius: '8px'
+            borderColor: 'var(--error-color)',
           }}
         >
           <Text type="danger">{error}</Text>
@@ -228,13 +219,7 @@ export default function AppointmentsList() {
         onSuccess={handleFormSuccess}
       />
 
-      <Card 
-        style={{ 
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-        }}
-        bodyStyle={{ padding: '24px' }}
-      >
+      <Card>
         <Table
           columns={columns}
           dataSource={appointments}
