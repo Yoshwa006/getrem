@@ -2,9 +2,11 @@ package org.example.getrem.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.getrem.dto.client.ClientProfileDTO;
 import org.example.getrem.dto.client.ClientResponse;
 import org.example.getrem.dto.client.CreateClientRequest;
 import org.example.getrem.dto.client.UpdateClientRequest;
+import org.example.getrem.repository.CustomClientProfileRepo;
 import org.example.getrem.service.ClientsService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +24,7 @@ import java.util.UUID;
 public class ClientsController {
 
     private final ClientsService clientsService;
-
+    private final CustomClientProfileRepo customClientProfileRepo;
     @PostMapping
     public ResponseEntity<ClientResponse> createClient(@Valid @RequestBody CreateClientRequest request) {
         ClientResponse response = clientsService.createClient(request);
@@ -53,6 +56,12 @@ public class ClientsController {
     public ResponseEntity<Void> deleteClient(@PathVariable UUID id) {
         clientsService.deleteClient(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/profile/{id}")
+    public List<ClientProfileDTO> getClientProfile(@PathVariable UUID id,
+                                                   Pageable pageable){
+        return customClientProfileRepo.getClientProfile(id, pageable);
     }
 }
 

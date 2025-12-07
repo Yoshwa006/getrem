@@ -1,15 +1,14 @@
 package org.example.getrem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.example.getrem.enums.ClientStatus;
 import org.example.getrem.enums.Gender;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
 @Entity
 @Getter
 @Setter
@@ -28,6 +27,7 @@ public class Clients {
 
     private ClientStatus status;
 
-    @OneToMany(mappedBy = "clients", cascade = CascadeType.ALL)
-    private List<Treatment> treatments = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
+    private Set<Treatment> treatments = new HashSet<>();
 }
