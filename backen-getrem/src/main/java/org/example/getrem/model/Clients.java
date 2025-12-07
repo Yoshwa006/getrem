@@ -7,7 +7,9 @@ import lombok.Setter;
 import org.example.getrem.enums.ClientStatus;
 import org.example.getrem.enums.Gender;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Getter

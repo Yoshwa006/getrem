@@ -7,8 +7,6 @@ import jakarta.persistence.criteria.*;
 import org.example.getrem.dto.client.ClientProfileDTO;
 import org.example.getrem.mapper.ClientProfileMapper;
 import org.example.getrem.model.Clients;
-import org.example.getrem.model.Payment;
-import org.example.getrem.model.Treatment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 

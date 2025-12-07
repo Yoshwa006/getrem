@@ -1,7 +1,7 @@
 package org.example.getrem.service;
 
-import org.example.getrem.dto.billing.TreatmentResponse;
 import org.example.getrem.dto.billing.CreateTreatmentRequest;
+import org.example.getrem.dto.billing.TreatmentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

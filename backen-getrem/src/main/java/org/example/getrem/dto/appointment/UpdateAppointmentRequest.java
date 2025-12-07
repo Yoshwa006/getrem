@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.getrem.enums.AppointmentStatus;
-import java.util.UUID;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder

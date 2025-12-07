@@ -6,8 +6,6 @@ import org.example.getrem.dto.ClientProfile.PaymentDTO;
 import org.example.getrem.dto.ClientProfile.TreatmentDTO;
 import org.example.getrem.enums.ClientStatus;
 import org.example.getrem.enums.Gender;
-import org.example.getrem.model.Payment;
-import org.example.getrem.model.Treatment;
 
 import java.util.List;
 
